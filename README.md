@@ -1,8 +1,8 @@
 # FlinkSummary
 Tuning and knowledge summary of Flink
-## Flink调优
+# Flink调优
 
-# 资源配置调优
+## 资源配置调优
   1. 最优并行度设置
     1. source端：调整并行度等于数据源的分区数，例如kafka的topic分区数。如果相等了，消费速度还是跟不是数据产生速度，那么就考虑调大kafka的topic的分区数，并且调整并行度和其相等。不要让flink的并行度大于kafka的topic的分区数，这样会产生有的并行度空闲，浪费资源。
     2. Transform端：第一次keyBy之前的算子，例如map,filter,flatmap处理速度快的算子，和source保持一致就行。第一次keyBy之后的算子，可以根据压测的方法来根据keyBy算子上游的数据发送量和该算子处理数据的能力得到最优并行度。总QPS/单个并行度处理能力=并行度，最后再乘1.2，留一些富余的资源。压测的方式很简单，先在kafka中积压数据，之后开启Flink任务，出现反压，就是处理瓶颈。相当于水库先积水，一下子泄洪。数据可以是自己造的模拟数据，也可以是生产中的部分数据。
@@ -13,7 +13,7 @@ Tuning and knowledge summary of Flink
     3. 设置 checkpoint 语义，可以设置为 EXACTLY_ONCE，表示既不重复消费也不丢数据AT_LEAST_ONCE，表示至少消费一次，可能会重复消费
     4. 设置checkpoint的超时时间，默认为10分钟，可以设置设置小一些
     5. 允许失败的次数
-# 反压处理
+## 反压处理
   1. 产生场景
     通过在短时间内的负载高峰导致系统的接收数据的速率远高于它处理数据的速度。在垃圾回收的时间内消息快速的堆积。在大促，节日等场景下数据量会急速增大。如果反压不及时处理会导致资源耗尽和系统崩溃。
   2. 反压机制
@@ -22,7 +22,7 @@ Tuning and knowledge summary of Flink
     1. 使用web UI的Job中的backpressure页面，其中会进行反压测试，会采样判断卡在申请缓存的次数，来确定是否出现反压，根据比例。
     2. 使用Metrics对task的inputChannel进行监控，判断是否满了。
   
-# 数据倾斜
+## 数据倾斜
   1. 检测是否出现数据倾斜
   每个task会有很多subtask,通过Flink的Web UI 界面可以很准确的检测到分发给每个subtask的数据量，这样          就可以判断出哪个subtask出现了数据倾斜，通常数据倾斜也会引起反压。
   2. keyBy后的聚合操作存在数据倾斜
